@@ -30,7 +30,6 @@ def main():
 
     server = networking.Server()
     server.accept_connection()
-    server.start()
 
     showstartscreen = 1
 
@@ -76,7 +75,7 @@ def main():
         clock = pygame.time.Clock()
         screen = pygame.display.set_mode(WINSIZE)
         pygame.display.set_caption('SNAKER')
-        screen.fill(BLACK)
+        #screen.fill(BLACK)
 
         #### show initial start screen
 

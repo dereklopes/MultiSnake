@@ -16,18 +16,24 @@ class Server(object):
     def __init__(self):
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listener.bind(('', 8080))
-        self.listener.listen(1)
+        self.listener.listen(10)
 
     def accept_connection(self):
         socket, info = self.listener.accept()
         connection = Connection(socket, info)
-        thread = threading.Thread(target=self.process_connection, args=(connection,))
-        thread.start()
+        thread_init = threading.Thread(target=self.process_connection, args=(connection,))
+        thread_init.start()
+        thread_listen = threading.Thread(target=self.listen_for_data, args=(connection,))
+        thread_listen.daemon = True
+        thread_listen.start()
 
     def process_connection(self, connection):
         print("[INFO] New user connected from {}".format(connection.ip))
-        data = connection.recv_from_client()
-        print("[INFO] User from {} now logged at {}".format(connection.ip))
+
+    def listen_for_data(self, connection):
+        while 1:
+            data = connection.recv_from_client()
+            print(data)
 
 class Connection():
     def __init__(self, socket, info=None):
