@@ -232,7 +232,10 @@ def main():
                 elif len(snakelist2) > 3 and snakelist2.count(snakexy2) > 0:
                     snakedead2 = TRUE
 
-
+               # check if snake collides with other snake - both die
+                if snakelist.count(snakexy2) > 0:
+                    snakedead = TRUE
+                    snakedead2 = TRUE
 
                 # generate an apple at a random position that is not occupied by a snake
                 if appleonscreen == 0:
