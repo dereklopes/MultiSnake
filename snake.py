@@ -57,7 +57,7 @@ def main():
 
         ######## VARIABLES
 
-        isHost = None
+        isHost = True
         server = None
         player = None
 
@@ -79,7 +79,7 @@ def main():
         pygame.init()
         clock = pygame.time.Clock()
         screen = pygame.display.set_mode(WINSIZE)
-        pygame.display.set_caption('SNAKER')
+        pygame.display.set_caption('MultiSnake')
         #screen.fill(BLACK)
 
         #### show initial start screen
@@ -141,9 +141,13 @@ def main():
                     text_surface = font.render('Searching for host', True, BLUE)
                     screen.blit(text_surface, (50, 300))
                     pygame.display.flip()
-                    player = networking.Player()
-                    break
-
+                if not isHost:
+                    try:
+                        player = networking.Player()
+                        break
+                    except:
+                        print('No host found')
+                        pass
 
                 clock.tick(10)
 
