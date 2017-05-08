@@ -11,14 +11,11 @@ pip install pygame
 
 ## Running
 
-On the server, run:
+Run:
 ```
 python snake.py
 ```
-On the client(s), run:
-```
-python client.py
-```
+Then press 'h' to host game or 'j' to join a game.
 
 ## Built With
 
