@@ -87,23 +87,8 @@ def main():
         if showstartscreen == TRUE:
             showstartscreen = FALSE
 
-            s = [[180,120],[180,100],[160,100],[140,100],[120,100],[100,100],[100,120],[100,140],[100,160],
-                 [120,160],[140,160],[160,160],[180,160],[180,180],[180,200],[180,220],[160,220],[140,220],
-                 [120,220],[100,220],[100,200]]
-            apple = [100,200]
-            applexy = apple
-
-            pygame.draw.rect(screen,GREEN,Rect(apple,BLOCKSIZE))
-            pygame.display.flip()
-            clock.tick(8)
-
-            for e in s:
-                pygame.draw.rect(screen,BLUE,Rect(e,BLOCKSIZE))
-                pygame.display.flip()
-                clock.tick(8)
-
             font = pygame.font.SysFont("arial", 64)
-            text_surface = font.render("NAKE", True, BLUE)
+            text_surface = font.render("SNAKE", True, BLUE)
             screen.blit(text_surface, (220,180))
             font = pygame.font.SysFont("arial", 24)
             text_surface = font.render("Move the snake with the arrow keys to eat the apples", True, BLUE)
