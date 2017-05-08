@@ -28,8 +28,8 @@ counter = 0
 
 def main():
 
-    server = networking.Server()
-    server.accept_connection()
+    #server = networking.Server()
+    #server.accept_connection()
 
     showstartscreen = 1
 
@@ -43,10 +43,10 @@ def main():
         GREEN = [0,255,0]
         BLUE = [0,0,255]
         BLOCKSIZE = [20,20]
-        UP = 1
-        DOWN = 3
-        RIGHT = 2
-        LEFT = 4
+        UP = 'UP'
+        DOWN = 'DOWN'
+        RIGHT = 'RIGHT'
+        LEFT = 'LEFT'
         MAXX = 760
         MINX = 20
         MAXY = 560
@@ -57,6 +57,10 @@ def main():
 
         ######## VARIABLES
 
+        isHost = None
+        server = None
+        player = None
+
         direction = RIGHT # 1=up,2=right,3=down,4=left
         snakexy = [300,400]
         snakelist = [[300,400],[280,400],[260,400]]
@@ -65,6 +69,7 @@ def main():
         appleonscreen = 0
         #applexy = [0,0]
         newdirection = RIGHT
+        olddirection = newdirection
         snakedead = FALSE
         gameregulator = 6
         gamepaused = 0
@@ -82,7 +87,9 @@ def main():
         if showstartscreen == TRUE:
             showstartscreen = FALSE
 
-            s = [[180,120],[180,100],[160,100],[140,100],[120,100],[100,100],[100,120],[100,140],[100,160],[120,160],[140,160],[160,160],[180,160],[180,180],[180,200],[180,220],[160,220],[140,220],[120,220],[100,220],[100,200]]
+            s = [[180,120],[180,100],[160,100],[140,100],[120,100],[100,100],[100,120],[100,140],[100,160],
+                 [120,160],[140,160],[160,160],[180,160],[180,180],[180,200],[180,220],[160,220],[140,220],
+                 [120,220],[100,220],[100,200]]
             apple = [100,200]
 
             pygame.draw.rect(screen,GREEN,Rect(apple,BLOCKSIZE))
@@ -95,17 +102,19 @@ def main():
                 clock.tick(8)
 
             font = pygame.font.SysFont("arial", 64)
-            text_surface = font.render("NAKER", True, BLUE)
+            text_surface = font.render("NAKE", True, BLUE)
             screen.blit(text_surface, (220,180))
             font = pygame.font.SysFont("arial", 24)
             text_surface = font.render("Move the snake with the arrow keys to eat the apples", True, BLUE)
             screen.blit(text_surface, (50,300))
             text_surface = font.render("Avoid the walls and yourself !", True, BLUE)
             screen.blit(text_surface, (50,350))
-            text_surface = font.render("Press s to start a new game - Press q to quit at any time", True, BLUE)
+            text_surface = font.render("Press h to host a new game - Press j to join a new game", True, BLUE)
             screen.blit(text_surface, (50,400))
             text_surface = font.render("Press p to pause r to resume at any time", True, BLUE)
             screen.blit(text_surface, (50,450))
+            text_surface = font.render('Press q to quit at any time', True, BLUE)
+            screen.blit(text_surface, (50, 500))
 
             pygame.display.flip()
             while 1:
@@ -115,7 +124,26 @@ def main():
 
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[K_q]: exit()
-                if pressed_keys[K_s]: break
+                elif pressed_keys[K_h]:
+                    # host a new game
+                    isHost = True
+                    screen.fill(BLACK)
+                    text_surface = font.render('Waiting for player to join', True, BLUE)
+                    screen.blit(text_surface, (50, 300))
+                    pygame.display.flip()
+                    server = networking.Server()
+                    server.accept_connection()
+                    break
+                elif pressed_keys[K_j]:
+                    # join a new game
+                    isHost = False
+                    screen.fill(BLACK)
+                    text_surface = font.render('Searching for host', True, BLUE)
+                    screen.blit(text_surface, (50, 300))
+                    pygame.display.flip()
+                    player = networking.Player()
+                    break
+
 
                 clock.tick(10)
 
@@ -130,12 +158,17 @@ def main():
 
             pressed_keys = pygame.key.get_pressed()
 
-            if pressed_keys[K_LEFT]: newdirection = LEFT
-            if pressed_keys[K_RIGHT]: newdirection = RIGHT
-            if pressed_keys[K_UP]: newdirection = UP
-            if pressed_keys[K_DOWN]: newdirection = DOWN
+            olddirection = newdirection
+            if pressed_keys[K_LEFT]: newdirection = 'LEFT'
+            if pressed_keys[K_RIGHT]: newdirection = 'RIGHT'
+            if pressed_keys[K_UP]: newdirection = 'UP'
+            if pressed_keys[K_DOWN]: newdirection = 'DOWN'
             if pressed_keys[K_q]: snakedead = TRUE
             if pressed_keys[K_p]: gamepaused = 1
+
+            # If not the host, send input to the host
+            if player is not None and newdirection != olddirection:
+                player.send_message(newdirection)
 
             ### wait here if p key is pressed until p key is pressed again
 

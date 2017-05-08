@@ -33,7 +33,8 @@ class Server(object):
     def listen_for_data(self, connection):
         while 1:
             data = connection.recv_from_client()
-            print(data)
+            if data is not None or '':
+                print(data)
 
 class Connection():
     def __init__(self, socket, info=None):
