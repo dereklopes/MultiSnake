@@ -17,13 +17,15 @@ class Server(object):
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listener.bind(('', 8080))
         self.listener.listen(10)
+        self.data = None
+        self.connection = None
 
     def accept_connection(self):
         socket, info = self.listener.accept()
-        connection = Connection(socket, info)
-        thread_init = threading.Thread(target=self.process_connection, args=(connection,))
+        self.connection = Connection(socket, info)
+        thread_init = threading.Thread(target=self.process_connection, args=(self.connection,))
         thread_init.start()
-        thread_listen = threading.Thread(target=self.listen_for_data, args=(connection,))
+        thread_listen = threading.Thread(target=self.listen_for_data, args=(self.connection,))
         thread_listen.daemon = True
         thread_listen.start()
 
@@ -32,9 +34,12 @@ class Server(object):
 
     def listen_for_data(self, connection):
         while 1:
-            data = connection.recv_from_client()
+            data = connection.receive().decode()
             if data is not None or '':
-                print(data)
+                self.data = data
+
+    def send_data(self, msg):
+        self.connection.send(msg)
 
 class Connection():
     def __init__(self, socket, info=None):
@@ -46,17 +51,29 @@ class Connection():
     def connect_to_server(self, ip, port):
         self.socket.connect((ip, port))
 
-    def send_to_server(self, msg):
-        self.socket.send(msg.encode())
+    def send(self, msg):
+        self.socket.send(msg)
 
-    def recv_from_client(self):
-        return self.socket.recv(1024).decode()
+    def receive(self):
+        return self.socket.recv(1024)
 
 class Player():
     def __init__(self):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection = Connection(connection)
         self.connection.connect_to_server("localhost", 8080)
+        self.data = None
 
     def send_message(self, msg):
-        self.connection.send_to_server(msg)
+        self.connection.send(msg.encode())
+
+    def process_connection(self):
+        thread_listen = threading.Thread(target=self.listen_for_data, args=(self.connection,))
+        thread_listen.daemon = True
+        thread_listen.start()
+
+    def listen_for_data(self, connection):
+        while 1:
+            data = connection.receive()
+            if data is not None or '':
+                self.data = data
