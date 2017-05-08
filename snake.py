@@ -61,15 +61,15 @@ def main():
         server = None
         player = None
 
-        direction = RIGHT # 1=up,2=right,3=down,4=left
+        direction = RIGHT
         snakexy = [300,400]
         snakelist = [[300,400],[280,400],[260,400]]
+        snakexy2 = [600, 400]
+        snakelist2 = [[600, 400], [580, 400], [560, 400]]
         counter = 0
         score = 0
         appleonscreen = 0
         #applexy = [0,0]
-        newdirection = RIGHT
-        olddirection = newdirection
         snakedead = FALSE
         gameregulator = 6
         gamepaused = 0
@@ -162,17 +162,21 @@ def main():
 
             pressed_keys = pygame.key.get_pressed()
 
-            olddirection = newdirection
-            if pressed_keys[K_LEFT]: newdirection = 'LEFT'
-            if pressed_keys[K_RIGHT]: newdirection = 'RIGHT'
-            if pressed_keys[K_UP]: newdirection = 'UP'
-            if pressed_keys[K_DOWN]: newdirection = 'DOWN'
+            olddirection = direction
+            if pressed_keys[K_LEFT] and olddirection is not RIGHT:
+                direction = LEFT
+            if pressed_keys[K_RIGHT] and olddirection is not LEFT:
+                direction = RIGHT
+            if pressed_keys[K_UP] and olddirection is not DOWN:
+                direction = UP
+            if pressed_keys[K_DOWN] and olddirection is not UP:
+                direction = DOWN
             if pressed_keys[K_q]: snakedead = TRUE
             if pressed_keys[K_p]: gamepaused = 1
 
             # If not the host, send input to the host
-            if player is not None and newdirection != olddirection:
-                player.send_message(newdirection)
+            if player is not None and direction != olddirection:
+                player.send_message(direction)
 
             ### wait here if p key is pressed until p key is pressed again
 
@@ -194,20 +198,6 @@ def main():
 
 
             if gameregulator == 6:
-
-                ####### lets make sure we can't go back the reverse direction
-
-                if newdirection == LEFT and not direction == RIGHT:
-                    direction = newdirection
-
-                elif newdirection == RIGHT and not direction == LEFT:
-                    direction = newdirection
-
-                elif newdirection == UP and not direction == DOWN:
-                    direction = newdirection
-
-                elif newdirection == DOWN and not direction == UP:
-                    direction = newdirection
 
                 ##### now lets move the snake according to the direction
                 ##### if we hit the wall the snake dies
