@@ -2,22 +2,14 @@
 #
 #
 #
-#  SNAKER.py  - A simple SNAKE game written in Python and Pygame
-#
-#  This is my first Python / Pygame game written as a learning
-#  exercise.
+#  MultiSake - A networked snake game using Pygame
 #
 #
-#  Version: 0.1
-#  Date:  24 August 2008
-#  Author:  R Brooks
-#  Author email:  rsbrooks@gmail.com
+#  Authors: Derek Lopes, John Moon, Pierre Vachon, Manzoor Ahmed
 #
 #
 #
 #####################################################################
-
-######### IMPORTS ###################################################
 
 import sys, socket, random, math, pygame, networking, pickle
 from pygame.locals import *
@@ -34,40 +26,34 @@ class GameInfo(object):
         self.snakedead = snakedead
         self.snakedead2 = snakedead2
 
-######### MAIN #####################################################
+# Constants
+WINSIZE = [800,600]
+WHITE = [255,255,255]
+BLACK = [0,0,0]
+RED = [255,0,0]
+GREEN = [0,255,0]
+BLUE = [0,0,255]
+BLOCKSIZE = [20,20]
+UP = 'UP'
+DOWN = 'DOWN'
+RIGHT = 'RIGHT'
+LEFT = 'LEFT'
+MAXX = 760
+MINX = 20
+MAXY = 560
+MINY = 80
+SNAKESTEP = 20
+TRUE = True
+FALSE = False
+
 
 def main():
 
-    #server = networking.Server()
-    #server.accept_connection()
-
-    showstartscreen = 1
+    showstartscreen = True
 
     while 1:
-        ######## CONSTANTS
 
-        WINSIZE = [800,600]
-        WHITE = [255,255,255]
-        BLACK = [0,0,0]
-        RED = [255,0,0]
-        GREEN = [0,255,0]
-        BLUE = [0,0,255]
-        BLOCKSIZE = [20,20]
-        UP = 'UP'
-        DOWN = 'DOWN'
-        RIGHT = 'RIGHT'
-        LEFT = 'LEFT'
-        MAXX = 760
-        MINX = 20
-        MAXY = 560
-        MINY = 80
-        SNAKESTEP = 20
-        TRUE = True
-        FALSE = False
-
-        ######## VARIABLES
-
-        isHost = True
+        is_host = True
         server = None
         player = None
 
@@ -95,9 +81,8 @@ def main():
         clock = pygame.time.Clock()
         screen = pygame.display.set_mode(WINSIZE)
         pygame.display.set_caption('MultiSnake')
-        #screen.fill(BLACK)
 
-        #### show initial start screen
+        # show initial start screen
 
         if showstartscreen == TRUE:
             showstartscreen = FALSE
@@ -142,7 +127,7 @@ def main():
                 if pressed_keys[K_q]: exit()
                 elif pressed_keys[K_h]:
                     # host a new game
-                    isHost = True
+                    is_host = True
                     screen.fill(BLACK)
                     text_surface = font.render('Waiting for player to join', True, BLUE)
                     screen.blit(text_surface, (50, 300))
@@ -152,12 +137,12 @@ def main():
                     break
                 elif pressed_keys[K_j]:
                     # join a new game
-                    isHost = False
+                    is_host = False
                     screen.fill(BLACK)
                     text_surface = font.render('Searching for host', True, BLUE)
                     screen.blit(text_surface, (50, 300))
                     pygame.display.flip()
-                if not isHost:
+                if not is_host:
                     # connect to host and listen for data
                     try:
                         player = networking.Player()
@@ -171,7 +156,7 @@ def main():
 
         while not gameInfo.snakedead or not gameInfo.snakedead2:
 
-            ###### get input events  ####
+            # get input events from pygame
 
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -198,8 +183,8 @@ def main():
             elif server is not None and server.data is not None:
                 direction2 = server.data
 
-            ### wait here if p key is pressed until p key is pressed again
-
+            # wait here if p key is pressed until p key is pressed again
+            # TODO: implement with networking, currently can't pause
             while gamepaused == 1:
                 for event in pygame.event.get():
                     if event.type == QUIT:
@@ -209,20 +194,10 @@ def main():
                     gamepaused = 0
                 clock.tick(10)
 
+            # game regulator allows for checking snake separately from other game functions
+            if gameregulator == 6 and is_host:
 
-            ### added gameregulator because setting a very low clock ticks
-            ### caused the keyboard input to be hit and miss.  So I up the
-            ### gameticks and the input and screen refresh is at this rate
-            ### but the snake moving and all other logic is at the slower
-            ### "regulated" speed
-
-
-            if gameregulator == 6 and isHost:
-
-                ##### now lets move the snake according to the direction
-                ##### if we hit the wall the snake dies
-                ##### need to make it less twitchy when you hit the walls
-
+                # move the snake and check for collision
                 if not snakedead:
                     if direction == RIGHT:
                         snakexy[0] = snakexy[0] + SNAKESTEP
@@ -244,7 +219,7 @@ def main():
                         if snakexy[1] > MAXY:
                             snakedead = TRUE
 
-                # Apply direction to snake 2
+                # Also for snake 2
                 if not snakedead2:
                     if direction2 == RIGHT:
                         snakexy2[0] = snakexy2[0] + SNAKESTEP
@@ -266,10 +241,7 @@ def main():
                         if snakexy2[1] > MAXY:
                             snakedead2 = TRUE
 
-                ### is the snake crossing over itself
-                ### had to put the > 1 test in there as I was
-                ### initially matching on first pass otherwise - not sure why
-
+                # check if snake collides with itself
                 if len(snakelist) > 3 and snakelist.count(snakexy) > 0:
                     snakedead = TRUE
                 elif len(snakelist2) > 3 and snakelist2.count(snakexy2) > 0:
@@ -277,9 +249,7 @@ def main():
 
 
 
-                #### generate an apple at a random position if one is not on screen
-                #### make sure apple never appears in snake position
-
+                # generate an apple at a random position that is not occupied by a snake
                 if appleonscreen == 0:
                     good = FALSE
                     while good == FALSE:
@@ -290,10 +260,7 @@ def main():
                             good = TRUE
                     appleonscreen = 1
 
-                #### add new position of snake head
-                #### if we have eaten the apple don't pop the tail ( grow the snake )
-                #### if we have not eaten an apple then pop the tail ( snake same size )
-
+                # grow the snake, discard if it hasn't eaten an apple
                 snakelist.insert(0,list(snakexy))
                 if snakexy[0] == applexy[0] and snakexy[1] == applexy[1]:
                     appleonscreen = 0
@@ -306,8 +273,7 @@ def main():
                 else:
                     snakelist.pop()
 
-                # check if snake 2 has eaten apple
-                # TODO: Score for snake2 for snake2
+                # check for snake2
                 snakelist2.insert(0, list(snakexy2))
                 if snakexy2[0] == applexy[0] and snakexy2[1] == applexy[1]:
                     appleonscreen = 0
@@ -328,61 +294,54 @@ def main():
 
                 gameregulator = 0
 
-            if not isHost:
+            if not is_host:
                 if player.data is None:
                     gameInfo = GameInfo(score, score2, snakelist, snakelist2, applexy, snakedead, snakedead2)
                 else:
                     gameInfo = pickle.loads(player.data)
 
-            ###### RENDER THE SCREEN ###############
+            # Render the screen
 
-            ###### Clear the screen
+            # clear screen first
             screen.fill(BLACK)
 
-            ###### Draw the screen borders
-            ### horizontals
+            # Draw borders
+            # horizontals
             pygame.draw.line(screen,GREEN,(0,9),(799,9),20)
             pygame.draw.line(screen,GREEN,(0,590),(799,590),20)
             pygame.draw.line(screen,GREEN,(0,69),(799,69),20)
-            ### verticals
+            # verticals
             pygame.draw.line(screen,GREEN,(9,0),(9,599),20)
             pygame.draw.line(screen,GREEN,(789,0),(789,599),20)
 
-            ###### Print the score
+            # Print the score depending on player
             font = pygame.font.SysFont("arial", 38)
-            if isHost:
+            if is_host:
                 text_surface = font.render("SNAKE!     Your Score: " + str(gameInfo.score), True, RED)
             else:
                 text_surface = text_surface = font.render("SNAKE!     Your Score: " + str(gameInfo.score2), True, BLUE)
             screen.blit(text_surface, (50,18))
 
-            ###### Output the array elements to the screen as rectangles ( the snake)
+            # Draw the snakes
             for element in gameInfo.snakelist:
                 pygame.draw.rect(screen,RED,Rect(element,BLOCKSIZE))
             for element in gameInfo.snakelist2:
                 pygame.draw.rect(screen,BLUE,Rect(element,BLOCKSIZE))
 
-            ###### Draw the apple
+            # Draw the apple
             pygame.draw.rect(screen,GREEN,Rect(gameInfo.apple,BLOCKSIZE))
 
-            ###### Flip the screen to display everything we just changed
+            # Flip the screen to display everything
             pygame.display.flip()
-
-
 
             gameregulator = gameregulator + 1
 
             clock.tick(25)
 
 
-        ##### if the snake is dead then it's game over
+        # if both snakes are dead, display game over
 
         if gameInfo.snakedead and gameInfo.snakedead2:
-            if isHost:
-                # send final info so client knows game is over
-                gameInfo = GameInfo(score, score2, snakelist, snakelist2, applexy, snakedead, snakedead2)
-                gameInfoString = pickle.dumps(gameInfo)
-                server.send_data(gameInfoString)
             screen.fill(BLACK)
             font = pygame.font.SysFont("arial", 48)
             if gameInfo.score > gameInfo.score2:
