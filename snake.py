@@ -38,6 +38,8 @@ UP = 'UP'
 DOWN = 'DOWN'
 RIGHT = 'RIGHT'
 LEFT = 'LEFT'
+PAUSE = 'PAUSE'
+RESUME = 'RESUME'
 MAXX = 760
 MINX = 20
 MAXY = 560
@@ -45,7 +47,6 @@ MINY = 80
 SNAKESTEP = 20
 TRUE = True
 FALSE = False
-
 
 def main():
 
@@ -106,10 +107,23 @@ def main():
             while 1:
                 for event in pygame.event.get():
                     if event.type == QUIT:
+                        if player is not None:
+                            player.close_connection()
+                            snakedead2 = True
+                        if server is not None:
+                            server.close_connection()
+                            snakedead = True
                         exit()
 
                 pressed_keys = pygame.key.get_pressed()
-                if pressed_keys[K_q]: exit()
+                if pressed_keys[K_q]:
+                        if player is not None:
+                            player.close_connection()
+                            snakedead2 = True
+                        if server is not None:
+                            snakedead = True
+                            server.close_connection()
+                        exit()
                 elif pressed_keys[K_h]:
                     # host a new game
                     is_host = True
@@ -145,11 +159,18 @@ def main():
 
             for event in pygame.event.get():
                 if event.type == QUIT:
+                    if player is not None:
+                        player.close_connection()
+                        snakedead2 = True
+                    if server is not None:
+                        server.close_connection()
+                        snakedead = True
                     exit()
 
             pressed_keys = pygame.key.get_pressed()
 
             olddirection = direction
+            olddirection2 = direction2
             if pressed_keys[K_LEFT] and olddirection is not RIGHT:
                 direction = LEFT
             if pressed_keys[K_RIGHT] and olddirection is not LEFT:
@@ -158,8 +179,10 @@ def main():
                 direction = UP
             if pressed_keys[K_DOWN] and olddirection is not UP:
                 direction = DOWN
+            if pressed_keys[K_p]:
+                direction = PAUSE
+                gamepaused = 1
             if pressed_keys[K_q]: snakedead = TRUE
-            #if pressed_keys[K_p]: gamepaused = 1
 
             # If not the host, send input to the host
             if player is not None and direction != olddirection:
@@ -167,14 +190,33 @@ def main():
             # Otherwise, get the direction sent
             elif server is not None and server.data is not None:
                 direction2 = server.data
+                if direction2 == PAUSE:
+                    gamepaused = 1
+                    direction2 = olddirection2
 
-            # wait here if p key is pressed until p key is pressed again
-            # TODO: implement with networking, currently can't pause
+            if direction == PAUSE:
+                    direction = olddirection
+                    directoin2 = olddirection2
+
+            # wait here if p key is pressed until r key is pressed
             while gamepaused == 1:
                 for event in pygame.event.get():
                     if event.type == QUIT:
+                        if player is not None:
+                            player.close_connection()
+                            snakedead2 = True
+                        if server is not None:
+                            server.close_connection()
+                            snakedead = True
                         exit()
                 pressed_keys = pygame.key.get_pressed()
+                if player is not None:
+                    if pressed_keys[K_r]:
+                        player.send_message(RESUME)
+                if server is not None and server.data is not None:
+                    if server.data == RESUME:
+                        gamepaused = 0
+                        direction2 = olddirection2
                 if pressed_keys[K_r]:
                     gamepaused = 0
                 clock.tick(10)
@@ -232,8 +274,8 @@ def main():
                 elif len(snakelist2) > 3 and snakelist2.count(snakexy2) > 0:
                     snakedead2 = TRUE
 
-               # check if snake collides with other snake - both die
-                if snakelist.count(snakexy2) > 0:
+                # check if snake collides with other snake - both die
+                if any(point in snakelist for point in snakelist2):
                     snakedead = TRUE
                     snakedead2 = TRUE
 
@@ -353,10 +395,22 @@ def main():
             while 1:
                 for event in pygame.event.get():
                     if event.type == QUIT:
+                        if player is not None:
+                            player.close_connection()
+                            snakedead2 = True
+                        if server is not None:
+                            server.close_connection()
+                            snakedead = True
                         exit()
 
                 pressed_keys = pygame.key.get_pressed()
                 if pressed_keys[K_q]:
+                    if player is not None:
+                        player.close_connection()
+                        snakedead2 = True
+                    if server is not None:
+                        server.close_connection()
+                        snakedead = True
                     exit()
                 if pressed_keys[K_m]:
                     showstartscreen = True

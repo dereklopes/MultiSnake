@@ -41,6 +41,9 @@ class Server(object):
     def send_data(self, msg):
         self.connection.send(msg)
 
+    def close_connection(self):
+        self.connection.close()
+
 class Connection():
     def __init__(self, socket, info=None):
         self.socket = socket
@@ -56,6 +59,9 @@ class Connection():
 
     def receive(self):
         return self.socket.recv(1024)
+
+    def close(self):
+        self.socket.close()
 
 class Player():
     def __init__(self):
@@ -77,3 +83,6 @@ class Player():
             data = connection.receive()
             if data is not None or '':
                 self.data = data
+
+    def close_connection(self):
+        self.connection.close()
